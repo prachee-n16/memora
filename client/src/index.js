@@ -1,13 +1,39 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./index.css";
+import reportWebVitals from "./reportWebVitals";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+import "@fontsource/poppins/300.css";
+import "@fontsource/poppins/400.css";
+import "@fontsource/poppins/500.css";
+import "@fontsource/poppins/700.css";
+
+import RootLayout from "./layouts/RootLayout";
+import Landing from "./components/Landing";
+import SignInPage from "./components/SignInPage";
+import SignUpPage from "./components/SignUpPage";
+import Dashboard from "./components/Dashboard";
+
+const router = createBrowserRouter([
+  {
+    element: <RootLayout />,
+    children: [
+      { path: "/", element: <Landing /> },
+      { path: "/sign-in", element: <SignInPage /> },
+      { path: "/sign-up", element: <SignUpPage /> },
+      {
+        element: <Dashboard />,
+        path: "dashboard",
+      },
+    ],
+  },
+]);
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    <App />
+    <RouterProvider router={router} />
   </React.StrictMode>
 );
 
