@@ -195,28 +195,29 @@ def insert_user():
         conn.rollback()
         return jsonify({"error": str(e)}), 400
 
-def insert_memory(user_id, title, image, description):
+def insert_memory(user_id, title, image, description, person_id=None):
     embedding = embeddings.embed_query(description)
     embedding_str = list_to_vector_string(embedding)
     
     sql = """
-    INSERT INTO Memories (user_id, title, image, description, embedding)
-    VALUES (?, ?, ?, ?, TO_VECTOR(?, DOUBLE))
+    INSERT INTO Memories (user_id, title, image, description, embedding, person_id)
+    VALUES (?, ?, ?, ?, TO_VECTOR(?, DOUBLE), ?)
     """
     
     try:
-        cursor.execute(sql, (user_id, title, image, description, embedding_str))
+        cursor.execute(sql, (user_id, title, image, description, embedding_str, person_id))
         conn.commit()
         return cursor.lastrowid
     except Exception as e:
         conn.rollback()
         print(f"Error inserting memory: {str(e)}")
         return None
-    
+
 @app.route('/insert_memory', methods=['POST'])
 def insert_memory_route():
     data = request.json
-    memory_id = insert_memory(data['user_id'], data['title'], data['image'], data['description'])
+    person_id = data.get('person_id')  
+    memory_id = insert_memory(data['user_id'], data['title'], data['image'], data['description'], person_id)
     if memory_id:
         return jsonify({"message": "Memory added successfully", "memory_id": memory_id}), 201
     else:
@@ -304,4 +305,60 @@ def annotate_memory():
     return content
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    memories = [
+    {
+        'title': 'Vacation in Bali',
+        'image': '{process.env.PUBLIC_URL}/background-0.jpg',
+        'description': 'A relaxing vacation on the beautiful beaches of Bali, enjoying the sun and surf.'
+    },
+    {
+        'title': 'Graduation Day',
+        'image': '{process.env.PUBLIC_URL}/background-1.jpg',
+        'description': 'Celebrating graduation day with friends and family, marking the end of a significant journey.'
+    },
+    {
+        'title': 'Mountain Hiking',
+        'image': '{process.env.PUBLIC_URL}/background-2.jpg',
+        'description': 'An adventurous hike up the mountains, experiencing breathtaking views and fresh air.'
+    },
+    {
+        'title': 'Family Reunion',
+        'image': '{process.env.PUBLIC_URL}/background-3.jpg',
+        'description': 'A joyful family reunion with relatives coming together to share memories and catch up.'
+    },
+    {
+        'title': 'City Sightseeing',
+        'image': '{process.env.PUBLIC_URL}/background-4.jpg',
+        'description': 'Exploring the vibrant city life, visiting famous landmarks and enjoying local cuisine.'
+    },
+    {
+        'title': 'Beach Party',
+        'image': '{process.env.PUBLIC_URL}/background-5.jpg',
+        'description': 'A fun beach party with friends, complete with music, games, and a bonfire.'
+    },
+    {
+        'title': 'Wedding Celebration',
+        'image': '{process.env.PUBLIC_URL}/background-6.jpg',
+        'description': 'A beautiful wedding ceremony, celebrating the union of two people in love.'
+    },
+    {
+        'title': 'Camping Trip',
+        'image': '{process.env.PUBLIC_URL}/background-7.jpg',
+        'description': 'Spending a weekend camping in the great outdoors, enjoying nature and campfire stories.'
+    },
+    {
+        'title': 'Art Exhibition',
+        'image': '{process.env.PUBLIC_URL}/background-8.jpg',
+        'description': 'Visiting an art exhibition, appreciating the creativity and talent of various artists.'
+    }
+]
+
+    # Assuming you have a user_id for insertion
+    user_id = 1  # Replace with the actual user_id
+
+    for memory in memories:
+        inserted_id = insert_memory(user_id, memory['title'], memory['image'], memory['description'])
+        if inserted_id:
+            print(f"Successfully inserted memory: {memory['title']} with ID: {inserted_id}")
+        else:
+            print(f"Failed to insert memory: {memory['title']}")
