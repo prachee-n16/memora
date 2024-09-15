@@ -1,10 +1,20 @@
-import { AppBar, Box, Toolbar } from "@mui/material";
-import Searchbar from "./Searchbar.jsx";
-import { TextField, InputAdornment, Typography, Avatar } from "@mui/material";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  AppBar,
+  Box,
+  Toolbar,
+  TextField,
+  InputAdornment,
+  Typography,
+  Avatar,
+  Button,
+  Modal,
+} from "@mui/material";
 import RedditIcon from "@mui/icons-material/Reddit";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
-import React, { useState, useEffect } from "react";
+import MicIcon from "@mui/icons-material/Mic";
 import { v1 as uuidv1 } from "uuid";
+import axios from "axios";
 
 function stringToColor(string) {
   if (string === "Prachee Nanda") {
@@ -50,6 +60,10 @@ const ChatApp = () => {
       message: "Ask me anything :)",
     },
   ]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioModalOpen, setAudioModalOpen] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
 
   const handleOnSubmit = async (e) => {
     e.preventDefault();
@@ -65,6 +79,44 @@ const ChatApp = () => {
     ]);
     setNewMessage("");
   };
+
+  const startRecording = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorderRef.current = new MediaRecorder(stream);
+    audioChunksRef.current = [];
+
+    mediaRecorderRef.current.ondataavailable = (event) => {
+      audioChunksRef.current.push(event.data);
+    };
+
+    mediaRecorderRef.current.onstop = async () => {
+      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      reader.onloadend = async () => {
+        const base64Audio = reader.result.split(",")[1];
+        try {
+          const response = await axios.post("/transcribe", {
+            audio: base64Audio,
+          });
+          setNewMessage(response.data.transcription);
+        } catch (error) {
+          console.error("Error transcribing audio:", error);
+        }
+      };
+    };
+
+    mediaRecorderRef.current.start();
+    setIsRecording(true);
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
   return (
     <Box
       component="main"
@@ -130,6 +182,12 @@ const ChatApp = () => {
             ),
             endAdornment: (
               <InputAdornment position="end">
+                <Button
+                  onClick={() => setAudioModalOpen(true)}
+                  sx={{ minWidth: 0, p: 0 }}
+                >
+                  <MicIcon />
+                </Button>
                 <SendRoundedIcon />
               </InputAdornment>
             ),
@@ -146,6 +204,88 @@ const ChatApp = () => {
           }}
         />
       </form>
+      <Modal
+        open={audioModalOpen}
+        onClose={() => setAudioModalOpen(false)}
+        aria-labelledby="audio-input-modal"
+        aria-describedby="modal-for-audio-input"
+      >
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "#FFF8E1", 
+            borderRadius: "16px",
+            boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
+            p: 4,
+            textAlign: "center",
+          }}
+        >
+          <Typography
+            id="audio-input-modal"
+            variant="h5"
+            component="h2"
+            sx={{
+              fontWeight: "bold",
+              color: "#B85C38",
+              mb: 3,
+            }}
+          >
+            Ask Memora a Question
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 2,
+            }}
+          >
+            <Box
+              sx={{
+                width: 100,
+                height: 100,
+                borderRadius: "50%",
+                bgcolor: isRecording ? "#B85C38" : "#E0E0E0",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                transition: "all 0.3s ease",
+              }}
+            >
+              <MicIcon sx={{ fontSize: 48, color: "#FFF" }} />
+            </Box>
+            <Button
+              onClick={isRecording ? stopRecording : startRecording}
+              variant="contained"
+              sx={{
+                bgcolor: isRecording ? "#D32F2F" : "#B85C38",
+                color: "#FFF",
+                "&:hover": {
+                  bgcolor: isRecording ? "#B71C1C" : "#8B4513",
+                },
+                borderRadius: "24px",
+                px: 4,
+                py: 1,
+                fontWeight: "bold",
+              }}
+            >
+              {isRecording ? "Stop Recording" : "Start Recording"}
+            </Button>
+          </Box>
+          <Typography
+            variant="body2"
+            sx={{ mt: 3, color: "#666", fontStyle: "italic" }}
+          >
+            {isRecording
+              ? "Recording in progress..."
+              : "Click to start"}
+          </Typography>
+        </Box>
+      </Modal>
     </Box>
   );
 };
