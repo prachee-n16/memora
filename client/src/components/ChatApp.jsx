@@ -46,7 +46,7 @@ const ChatApp = () => {
   const [channelMessages, setChannelMessages] = useState([
     {
       id: "1234",
-      user: "memora",
+      user: "Memora AI",
       message: "Ask me anything :)",
     },
   ]);
