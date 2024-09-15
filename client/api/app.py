@@ -141,28 +141,52 @@ def chat():
 
 from datetime import datetime
 
+from flask import jsonify
+import base64
+
 @app.route('/get_user_memories/<int:user_id>', methods=['GET'])
 def get_user_memories(user_id):
-    cursor.execute("SELECT * FROM Memories WHERE user_id = ? ORDER BY timestamp DESC", [user_id])
+    cursor.execute("""
+        SELECT memory_id, title, description, image
+        FROM Memories
+        WHERE user_id = ?
+        ORDER BY timestamp DESC
+    """, [user_id])
+    
     memories = cursor.fetchall()
-    memory_list = [{
-        "memory_id": memory[0],
-        "title": memory[2],
-        "description": memory[4].decode('utf-8') if isinstance(memory[4], bytearray) else memory[4],
-        "timestamp": memory[5].isoformat() if isinstance(memory[5], datetime) else str(memory[5])
-    } for memory in memories]
+    memory_list = []
+    
+    for memory in memories:
+        memory_dict = {
+            'memory_id': memory[0],
+            'title': memory[1],
+            'description': memory[2]
+        }
+        
+        if memory[3]:  # Check if image data exists
+            # Convert BLOB to base64 string
+            memory_dict['image'] = base64.b64encode(memory[3]).decode('utf-8')
+        else:
+            memory_dict['image'] = None
+        
+        memory_list.append(memory_dict)
+    
     return jsonify(memory_list), 200
     
 @app.route('/get_user_people/<int:user_id>', methods=['GET'])
 def get_user_people(user_id):
-    cursor.execute("SELECT * FROM People WHERE user_id = ?", [user_id])
+    cursor.execute("SELECT person_id, name, relationship, description, picture FROM People WHERE user_id = ?", [user_id])
     people = cursor.fetchall()
-    people_list = [{
-        "person_id": person[0],
-        "name": person[2],
-        "relationship": person[3],
-        "description": person[4]
-    } for person in people]
+    people_list = []
+    for person in people:
+        person_dict = {
+            'person_id': person[0],
+            'name': person[1],
+            'relationship': person[2],
+            'description': person[3],
+            'picture': base64.b64encode(person[4]).decode('utf-8') if person[4] else None
+        }
+        people_list.append(person_dict)
     return jsonify(people_list), 200
 
 @app.route('/transcribe', methods=['POST'])
@@ -307,60 +331,4 @@ def annotate_memory():
     return content
 
 if __name__ == '__main__':
-    memories = [
-    {
-        'title': 'Vacation in Bali',
-        'image': '{process.env.PUBLIC_URL}/background-0.jpg',
-        'description': 'A relaxing vacation on the beautiful beaches of Bali, enjoying the sun and surf.'
-    },
-    {
-        'title': 'Graduation Day',
-        'image': '{process.env.PUBLIC_URL}/background-1.jpg',
-        'description': 'Celebrating graduation day with friends and family, marking the end of a significant journey.'
-    },
-    {
-        'title': 'Mountain Hiking',
-        'image': '{process.env.PUBLIC_URL}/background-2.jpg',
-        'description': 'An adventurous hike up the mountains, experiencing breathtaking views and fresh air.'
-    },
-    {
-        'title': 'Family Reunion',
-        'image': '{process.env.PUBLIC_URL}/background-3.jpg',
-        'description': 'A joyful family reunion with relatives coming together to share memories and catch up.'
-    },
-    {
-        'title': 'City Sightseeing',
-        'image': '{process.env.PUBLIC_URL}/background-4.jpg',
-        'description': 'Exploring the vibrant city life, visiting famous landmarks and enjoying local cuisine.'
-    },
-    {
-        'title': 'Beach Party',
-        'image': '{process.env.PUBLIC_URL}/background-5.jpg',
-        'description': 'A fun beach party with friends, complete with music, games, and a bonfire.'
-    },
-    {
-        'title': 'Wedding Celebration',
-        'image': '{process.env.PUBLIC_URL}/background-6.jpg',
-        'description': 'A beautiful wedding ceremony, celebrating the union of two people in love.'
-    },
-    {
-        'title': 'Camping Trip',
-        'image': '{process.env.PUBLIC_URL}/background-7.jpg',
-        'description': 'Spending a weekend camping in the great outdoors, enjoying nature and campfire stories.'
-    },
-    {
-        'title': 'Art Exhibition',
-        'image': '{process.env.PUBLIC_URL}/background-8.jpg',
-        'description': 'Visiting an art exhibition, appreciating the creativity and talent of various artists.'
-    }
-]
-
-    # Assuming you have a user_id for insertion
-    user_id = 1  # Replace with the actual user_id
-
-    for memory in memories:
-        inserted_id = insert_memory(user_id, memory['title'], memory['image'], memory['description'])
-        if inserted_id:
-            print(f"Successfully inserted memory: {memory['title']} with ID: {inserted_id}")
-        else:
-            print(f"Failed to insert memory: {memory['title']}")
+    app.run(debug=True)
