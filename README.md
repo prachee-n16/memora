@@ -8,6 +8,9 @@ Nearly 7 million Americans are living with Alzheimer's. By 2050, this number is 
 ## What it does
 
 1. We use advanced facial recognition algorithms to identify and detect faces in various environments. Once a face is detected, the system classifies it based on known individuals, allowing the user to easily recognize and recall their loved ones. This feature helps users maintain connections with familiar faces, aiding in memory recall.
+![image](https://github.com/user-attachments/assets/b2b67b05-6434-4b7b-86c8-15b4dd6fa7da)
+![image](https://github.com/user-attachments/assets/dfe67918-ff5c-4e05-85dc-83e0e24169c4)
+
 2. The recorded conversations and interactions are summarized to create concise, useful summaries. These summaries help in reflecting on daily activities and maintaining a coherent record of the user's experiences.
 3. The system captures images and data about the user’s surroundings. This can include important locations, objects, or scenes that are relevant to their daily life. Captured data is processed to create concise summaries of the user’s environment.
 4. A chatbot is developed to interact with the user, providing information or answering questions based on the summarized data. This chatbot utilizes text-to-speech (TTS) and speech-to-text (STT) methods to facilitate smooth and intuitive communication.
@@ -24,4 +27,3 @@ Our project begins with capturing video feeds using mobile phones. An OpenCV mod
 <img width="1512" alt="Screenshot 2024-09-15 at 1 30 17 PM" src="https://github.com/user-attachments/assets/40a83113-63cc-47db-8a77-93cf07cad422">
 <img width="1512" alt="Screenshot 2024-09-15 at 1 30 44 PM" src="https://github.com/user-attachments/assets/17109f4d-b678-42d0-a08d-3000a5ab37f1">
 <img width="1512" alt="Screenshot 2024-09-15 at 1 30 52 PM" src="https://github.com/user-attachments/assets/d9adafb2-1b79-4a00-81c4-12dc2451a2ed">
-
