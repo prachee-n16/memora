@@ -1,10 +1,11 @@
 from flask import Flask, jsonify, request, Response, stream_with_context
 
 from flask_cors import CORS
+import intersystems_iris.dbapi._DBAPI as dbapi
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 import os
-import iris
+import intersystems_iris.dbapi._DBAPI as dbapi
 from deepgram import DeepgramClient, PrerecordedOptions
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain_iris import IRISVector
@@ -28,8 +29,9 @@ CONNECTION_STRING = f"{HOSTNAME}:{PORT}/{NAMESPACE}"
 USERNAME = "demo"
 PASSWORD = "demo"
 
+
 # Initialize connections and embeddings
-conn = iris.connect(CONNECTION_STRING, USERNAME, PASSWORD)
+conn = dbapi.connect(CONNECTION_STRING, USERNAME, PASSWORD)
 embeddings = OpenAIEmbeddings()
 db = IRISVector(connection_string=f"iris://demo:demo@{CONNECTION_STRING}", embedding_function=embeddings)
 cursor = conn.cursor()
@@ -37,22 +39,23 @@ cursor = conn.cursor()
 # Helper functions
 def update_memory_embedding(memory_id, description):
     embedding = embeddings.embed_query(description)
-    db.connection.execute("""
+    cursor.execute("""
         UPDATE Memories 
         SET embedding = TO_VECTOR(?, double) 
         WHERE memory_id = ?
-    """, (embedding, memory_id))
-    db.connection.commit()
+    """, [embedding, memory_id])
+    cursor.commit()
 
 def similarity_search(query, k=5):
     query_embedding = embeddings.embed_query(query)
-    cursor = db.connection.cursor()
+    query_embedding_str = ','.join(map(str, query_embedding))
+    
     cursor.execute("""
         SELECT memory_id, title, description, VECTOR_COSINE(embedding, TO_VECTOR(?, double)) as similarity
         FROM Memories
         ORDER BY similarity DESC
         LIMIT ?
-    """, (query_embedding, k))
+    """, [query_embedding_str, k])
     return cursor.fetchall()
 
 def rag_memory_retrieval(query):
@@ -107,11 +110,11 @@ def chat():
         return jsonify({"error": "Query is required"}), 400
 
     query = data['query']
-    # context = rag_memory_retrieval(query)
+    context = rag_memory_retrieval(query)
 
     messages = [
         {"role": "system", "content": "You are an AI assistant with access to the user's memories. Use the provided context to answer the user's query."},
-        {"role": "user", "content": f"query: {query}"}
+        {"role": "user", "content": f"query: {query}, context: {context}"}
     ]
 
     def generate():
@@ -212,3 +215,4 @@ def add_person():
 
 if __name__ == '__main__':
     app.run(debug=True)
+    
