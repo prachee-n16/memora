@@ -1,0 +1,17 @@
+Flask==3.0.3
+Flask-Cors==5.0.0
+intersystems_irispython-3.2.0-py3-none-any.whl
+sqlalchemy-iris
+langchain-iris
+testcontainers-iris
+llama-iris
+llama-index
+sentence-transformers
+langchain
+fastembed 
+openai 
+tiktoken
+python-dotenv
+pandas
+ipykernel
+setuptools

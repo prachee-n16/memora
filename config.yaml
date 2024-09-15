@@ -1,0 +1,23 @@
+model_name: qwen2v
+python_version: py310
+model_metadata:
+  example_model_input: { {'image': 'https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen-VL/assets/demo.jpeg'},
+    {'text': 'Generate the caption in English with grounding:'}, }
+
+
+requirements:
+  - torch==2.0.1
+  - transformers==4.33.2
+  - tiktokten
+  - transformers_stream_generator
+
+resources:
+  accelerator: null
+  cpu: '1'
+  memory: 20Gi
+  use_gpu: true
+
+secrets: {}
+system_packages: []
+environment_variables: {}
+external_package_dirs: []
