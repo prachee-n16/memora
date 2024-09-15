@@ -15,35 +15,32 @@ const Navbar = () => {
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar
-        position="static"
-        sx={{ bgcolor: "white", color: "black" }}
-        elevation={0}
+        position="fixed"
+        sx={{
+          bgcolor: "#fdfcf6",
+          color: "black",
+          width: "100%",
+          zIndex: (theme) => theme.zIndex.drawer + 1, // Ensure Navbar is above Sidebar
+        }}
+        elevation={1}
       >
         <Toolbar>
-          <Stack direction="row" spacing={3} sx={{ flexGrow: 1 }}>
-            <Typography variant="h6">Discover</Typography>
-            <Typography variant="h6">Features</Typography>
-            <Typography variant="h6">Pricing</Typography>
-            <Typography variant="h6">About</Typography>
-          </Stack>
-          <Typography variant="h6" sx={{ flexGrow: 1, textAlign: "center" }}>
-            {APP_NAME}
+          <Typography
+            variant="h6"
+            sx={{
+              fontFamily: "Berkshire Swash",
+              fontSize: "xx-large",
+              fontWeight: "bold",
+              marginLeft: "70px",
+            }}
+          >
+            memora
           </Typography>
           <Stack
             spacing={2}
             direction="row"
             sx={{ justifyContent: "end", alignItems: "center", flexGrow: 2 }}
           >
-            <Button variant={"outlined"} mx="5" color="inherit">
-              Demo
-            </Button>
-            {/* <Button
-              variant={"contained"}
-              color="inherit"
-              sx={{ bgcolor: "black", color: "white" }}
-            >
-              Login
-            </Button> */}
             <SignedIn>
               <UserButton afterSignOutUrl="/sign-in" />
             </SignedIn>
@@ -51,11 +48,16 @@ const Navbar = () => {
               <Button
                 variant="contained"
                 color="inherit"
-                sx={{ bgcolor: "black", color: "white" }}
+                sx={{
+                  bgcolor: "#ce5c29",
+                  // color: "white",
+                  textTransform: "none",
+                  fontWeight: "bold",
+                }}
                 component={Link} // Pass the Link component directly
                 to="/sign-in"
               >
-                Sign in
+                SIGN IN
               </Button>
             </SignedOut>
           </Stack>

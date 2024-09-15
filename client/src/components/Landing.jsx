@@ -2,46 +2,80 @@ import React from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
-import Stack from "@mui/material/Stack";
+import ArrowForwardIosRoundedIcon from "@mui/icons-material/ArrowForwardIosRounded";
+import { Grid } from "@mui/material";
+import { Link } from "react-router-dom";
 
 const Landing = () => {
   return (
     <Box
       sx={{
-        m: "10vh",
+        m: "100px",
         height: "70vh",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
-        alignItems: "center",
+        alignItems: "right",
       }}
     >
-      <Typography variant="h1" sx={{ textAlign: "center", fontWeight: "bold" }}>
-        where every <br /> memory matters!
-      </Typography>
-      <Typography variant="h5" sx={{ mt: 2 }}>
-        Designed with compassion and care to empower Alzheimer's Patients and
-        their Caregivers
-      </Typography>
-      <Stack direction="row" spacing={4} sx={{ mt: 4 }}>
-        <Button
-          variant="contained"
-          sx={{ mt: 4, bgcolor: "#9569ec", textTransform: "none" }}
-        >
-          Get Started
-        </Button>
-        <Button
-          variant="contained"
-          sx={{
-            mt: 4,
-            bgcolor: "#FFFFFF",
-            color: "black",
-            textTransform: "none",
-          }}
-        >
-          Demo?
-        </Button>
-      </Stack>
+      <Grid container alignItems="center">
+        <Grid item xs={12} md={6}>
+          <Typography
+            variant="h1"
+            sx={{ textAlign: "left", fontWeight: "bold" }}
+          >
+            where every memory matters.
+          </Typography>
+          <Typography
+            variant="h5"
+            sx={{
+              mt: 2,
+              fontFamily: "poppins",
+              color: "#545454",
+            }}
+          >
+            Designed with compassion and care, empowering Alzheimer's patients
+            to navigate life with confidence.
+          </Typography>
+          <Button
+            variant="outlined"
+            sx={{
+              mt: 4,
+              p: 1,
+              borderColor: "#f89742",
+              borderWidth: "2px",
+              color: "#000000",
+              fontWeight: "bold",
+              textTransform: "none",
+              width: "30%",
+              "&:hover": {
+                backgroundColor: "#f89742",
+              },
+            }}
+            endIcon={<ArrowForwardIosRoundedIcon />}
+            disableElevation
+            component={Link}
+            to="/dashboard"
+            size="medium"
+          >
+            Get Started
+          </Button>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Box
+            component="img"
+            src={`${process.env.PUBLIC_URL}/assets.jpg`}
+            alt="Memory matters"
+            sx={{
+              width: "100%",
+              mx: 13,
+              mt: 14,
+              borderRadius: "8px",
+            }}
+          />
+        </Grid>
+      </Grid>
     </Box>
   );
 };
