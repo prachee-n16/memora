@@ -51,6 +51,7 @@ export function stringAvatar(name) {
     children: `${name.split(" ")[0][0]}${name.split(" ")[1][0]}`,
   };
 }
+
 const ChatApp = () => {
   const [newMessage, setNewMessage] = useState("");
   const [channelMessages, setChannelMessages] = useState([
@@ -64,11 +65,12 @@ const ChatApp = () => {
   const [audioModalOpen, setAudioModalOpen] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const formRef = useRef(null); // Form reference
 
   const handleOnSubmit = async (e) => {
     e.preventDefault();
-    var id = uuidv1();
-
+    const id = uuidv1();
+  
     setChannelMessages((prev) => [
       ...prev,
       {
@@ -77,6 +79,50 @@ const ChatApp = () => {
         user: "Prachee Nanda",
       },
     ]);
+  
+    try {
+      const response = await fetch('http://127.0.0.1:5000/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: newMessage }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let aiMessage = '';
+  
+      setChannelMessages((prev) => [
+        ...prev,
+        {
+          id: uuidv1(),
+          message: '',
+          user: "Memora AI",
+        },
+      ]);
+  
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value);
+        aiMessage += chunk;
+  
+        setChannelMessages((prev) => {
+          const newMessages = [...prev];
+          newMessages[newMessages.length - 1].message = aiMessage;
+          return newMessages;
+        });
+      }
+    } catch (error) {
+      console.error("Error calling chat endpoint:", error);
+    }
+  
     setNewMessage("");
   };
 
@@ -104,8 +150,8 @@ const ChatApp = () => {
             }
           }
         );
-        setNewMessage(response.data.transcription);
-        setAudioModalOpen(false)
+        setNewMessage(response.data.transcription); // Set the transcribed message
+        setAudioModalOpen(false);
       } catch (error) {
         console.error("Error transcribing audio:", error);
       }
@@ -121,6 +167,12 @@ const ChatApp = () => {
       setIsRecording(false);
     }
   };
+
+  useEffect(() => {
+    if (newMessage) {
+      formRef.current.requestSubmit(); // Automatically submit the form
+    }
+  }, [newMessage]); // Trigger form submission when a new message is set
 
   return (
     <Box
@@ -171,7 +223,7 @@ const ChatApp = () => {
           </Box>
         ))}
       </Box>
-      <form onSubmit={handleOnSubmit}>
+      <form ref={formRef} onSubmit={handleOnSubmit}>
         <TextField
           value={newMessage}
           id="outlined-basic"
@@ -292,5 +344,6 @@ const ChatApp = () => {
     </Box>
   );
 };
+
 
 export default ChatApp;
