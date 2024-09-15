@@ -48,24 +48,30 @@ def update_memory_embedding(memory_id, description):
         UPDATE Memories 
         SET embedding = TO_VECTOR(?, double) 
         WHERE memory_id = ?
-    """, [embedding, memory_id])
-    cursor.commit()
+    """, (embedding, memory_id))
+    conn.commit()
+
+def list_to_vector_string(embedding_list):
+    return ','.join(map(str, embedding_list))
 
 def similarity_search(query, k=5):
     query_embedding = embeddings.embed_query(query)
-    query_embedding_str = ','.join(map(str, query_embedding))
-    
+    query_embedding_str = list_to_vector_string(query_embedding)
     cursor.execute("""
         SELECT memory_id, title, description, VECTOR_COSINE(embedding, TO_VECTOR(?, double)) as similarity
         FROM Memories
         ORDER BY similarity DESC
         LIMIT ?
-    """, [query_embedding_str, k])
+    """, (query_embedding_str, k))
     return cursor.fetchall()
 
 def rag_memory_retrieval(query):
-    relevant_memories = similarity_search(query)
-    context = "\n".join([f"Memory {i+1}: {mem[1]} - {mem[2]}" for i, mem in enumerate(relevant_memories)])
+    cursor.execute("""
+        SELECT memory_id, title, description
+        FROM Memories
+    """)
+    all_memories = cursor.fetchall()
+    context = "\n".join([f"Memory {mem[0]}: {mem[1]} - {mem[2]}" for mem in all_memories])
     return context
 
 @app.route('/get_memory_context', methods=['POST'])
@@ -116,6 +122,7 @@ def chat():
 
     query = data['query']
     context = rag_memory_retrieval(query)
+    print(context)
 
     messages = [
         {"role": "system", "content": "You are an AI assistant with access to the user's memories. Use the provided context to answer the user's query."},
@@ -189,20 +196,32 @@ def insert_user():
         conn.rollback()
         return jsonify({"error": str(e)}), 400
 
-@app.route('/insert_memory', methods=['POST'])
-def insert_memory():
-    data = request.json
-    embedding = embeddings.embed_query(data['description'])
+def insert_memory(user_id, title, image, description):
+    embedding = embeddings.embed_query(description)
+    embedding_str = list_to_vector_string(embedding)
+    
+    sql = """
+    INSERT INTO Memories (user_id, title, image, description, embedding)
+    VALUES (?, ?, ?, ?, TO_VECTOR(?, DOUBLE))
+    """
+    
     try:
-        cursor.execute("""
-            INSERT INTO Memories (user_id, title, image, description, embedding) 
-            VALUES (?, ?, ?, ?, ?)
-        """, [data['user_id'], data['title'], data['image'], data['description'], embedding])
+        cursor.execute(sql, (user_id, title, image, description, embedding_str))
         conn.commit()
-        return jsonify({"message": "Memory added successfully", "memory_id": cursor.lastrowid}), 201
+        return cursor.lastrowid
     except Exception as e:
         conn.rollback()
-        return jsonify({"error": str(e)}), 400
+        print(f"Error inserting memory: {str(e)}")
+        return None
+    
+@app.route('/insert_memory', methods=['POST'])
+def insert_memory_route():
+    data = request.json
+    memory_id = insert_memory(data['user_id'], data['title'], data['image'], data['description'])
+    if memory_id:
+        return jsonify({"message": "Memory added successfully", "memory_id": memory_id}), 201
+    else:
+        return jsonify({"error": "Failed to add memory"}), 400
 
 @app.route('/add_person', methods=['POST'])
 def add_person():
@@ -287,4 +306,3 @@ def annotate_memory():
 
 if __name__ == '__main__':
     app.run(debug=True)
-    
