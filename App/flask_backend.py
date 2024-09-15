@@ -87,6 +87,7 @@ def insert():
             break
         qMarks = qMarks+"?,"
     query = f"INSERT INTO {tableName} {columns} VALUES {qMarks}"
+
     conn = iris.connect(connection_string, username, password)
     cursor = conn.cursor()
     try:
@@ -97,6 +98,30 @@ def insert():
     conn.commit()
     conn.close()
     return jsonify({"response": "new information added"})
+
+@app.route('/getface', methods=['POST'])
+def getface():
+    embedding = request.json.get('embedding')
+    if not embedding:
+        return jsonify({"response": "No embedding provided"}), 400
+
+    conn = iris.connect(connection_string, username, password)
+    cursor = conn.cursor()
+    try:
+        query = "SELECT Top 1 * FROM faces ORDER BY VECTOR_DOT_PRODUCT(face_embedding, TO_VECTOR(:embedding)) DESC"
+        cursor.execute(query, (embedding,))
+        result = cursor.fetchone()
+        if result:
+            response = {"name": result[0], "other_info": result[1]}
+        else:
+            response = {"response": "No matching face found"}
+    except Exception as inst:
+        return jsonify({"response": str(inst)})
+    finally:
+        cursor.close()
+        conn.close()
+
+    return jsonify(response)
 
 
 
