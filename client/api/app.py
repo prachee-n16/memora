@@ -45,9 +45,15 @@ def transcribe_audio():
         return jsonify({"error": "Either 'url' or 'audio' must be provided"}), 400
 
     try:
+        headers = {
+            "Authorization": f"Api-Key {BASETEN_API_KEY}",
+            "Content-Type": "application/json", 
+            "Accept": "application/json"  
+        }
+        
         response = requests.post(
             f"https://model-{MODEL_ID}.api.baseten.co/production/predict",
-            headers={"Authorization": f"Api-Key {BASETEN_API_KEY}"},
+            headers=headers,
             json=payload
         )
         response.raise_for_status()

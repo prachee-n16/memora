@@ -96,9 +96,12 @@ const ChatApp = () => {
       reader.onloadend = async () => {
         const base64Audio = reader.result.split(",")[1];
         try {
-          const response = await axios.post("/transcribe", {
-            audio: base64Audio,
-          });
+          const response = await axios.post(
+            "http://127.0.0.1:5000/transcribe",
+            {
+              audio: base64Audio,
+            }
+          );
           setNewMessage(response.data.transcription);
         } catch (error) {
           console.error("Error transcribing audio:", error);
@@ -177,17 +180,17 @@ const ChatApp = () => {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <RedditIcon />
+                <Button
+                  onClick={() => setAudioModalOpen(true)}
+                  sx={{ minWidth: 0, p: 0 }}
+                  color="black"
+                >
+                  <MicIcon />
+                </Button>
               </InputAdornment>
             ),
             endAdornment: (
               <InputAdornment position="end">
-                <Button
-                  onClick={() => setAudioModalOpen(true)}
-                  sx={{ minWidth: 0, p: 0 }}
-                >
-                  <MicIcon />
-                </Button>
                 <SendRoundedIcon />
               </InputAdornment>
             ),
@@ -217,7 +220,7 @@ const ChatApp = () => {
             left: "50%",
             transform: "translate(-50%, -50%)",
             width: 400,
-            bgcolor: "#FFF8E1", 
+            bgcolor: "#FFF8E1",
             borderRadius: "16px",
             boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
             p: 4,
@@ -280,9 +283,7 @@ const ChatApp = () => {
             variant="body2"
             sx={{ mt: 3, color: "#666", fontStyle: "italic" }}
           >
-            {isRecording
-              ? "Recording in progress..."
-              : "Click to start"}
+            {isRecording ? "Recording in progress..." : "Click to start"}
           </Typography>
         </Box>
       </Modal>
