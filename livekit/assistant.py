@@ -12,6 +12,8 @@ from livekit.agents.llm import (
 from livekit.agents.voice_assistant import VoiceAssistant
 from livekit.plugins import deepgram, openai, silero
 
+from face_rec import FaceRecognition as face_rec
+
 load_dotenv()
 
 
@@ -133,10 +135,15 @@ async def entrypoint(ctx: JobContext):
         video_track = await get_video_track(ctx.room)
 
         async for event in rtc.VideoStream(video_track):
-            # We'll continually grab the latest image from the video track
-            # and store it in a variable.
             latest_image = event.frame
-
+            
+            result = await face_rec.process_image(latest_image)
+            
+            if result == "new_face_detected":
+                name = input("New face detected. Please enter the name: ")
+                await face_rec.add_new_person(name)
+            elif result:
+                print(f"Recognized: {result}")   
 
 if __name__ == "__main__":
     cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
