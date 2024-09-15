@@ -139,6 +139,8 @@ def chat():
 
     return Response(stream_with_context(generate()), content_type='text/event-stream')
 
+from datetime import datetime
+
 @app.route('/get_user_memories/<int:user_id>', methods=['GET'])
 def get_user_memories(user_id):
     cursor.execute("SELECT * FROM Memories WHERE user_id = ? ORDER BY timestamp DESC", [user_id])
@@ -146,11 +148,11 @@ def get_user_memories(user_id):
     memory_list = [{
         "memory_id": memory[0],
         "title": memory[2],
-        "description": memory[4],
-        "timestamp": memory[5]
+        "description": memory[4].decode('utf-8') if isinstance(memory[4], bytearray) else memory[4],
+        "timestamp": memory[5].isoformat() if isinstance(memory[5], datetime) else str(memory[5])
     } for memory in memories]
     return jsonify(memory_list), 200
-
+    
 @app.route('/get_user_people/<int:user_id>', methods=['GET'])
 def get_user_people(user_id):
     cursor.execute("SELECT * FROM People WHERE user_id = ?", [user_id])
