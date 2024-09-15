@@ -84,31 +84,33 @@ const ChatApp = () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     mediaRecorderRef.current = new MediaRecorder(stream);
     audioChunksRef.current = [];
-
+  
     mediaRecorderRef.current.ondataavailable = (event) => {
       audioChunksRef.current.push(event.data);
     };
-
+  
     mediaRecorderRef.current.onstop = async () => {
       const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      reader.onloadend = async () => {
-        const base64Audio = reader.result.split(",")[1];
-        try {
-          const response = await axios.post(
-            "http://127.0.0.1:5000/transcribe",
-            {
-              audio: base64Audio,
+      const formData = new FormData();
+      formData.append("audio", audioBlob, "audio.wav");
+  
+      try {
+        const response = await axios.post(
+          "http://127.0.0.1:5000/transcribe",
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data'
             }
-          );
-          setNewMessage(response.data.transcription);
-        } catch (error) {
-          console.error("Error transcribing audio:", error);
-        }
-      };
+          }
+        );
+        setNewMessage(response.data.transcription);
+        setAudioModalOpen(false)
+      } catch (error) {
+        console.error("Error transcribing audio:", error);
+      }
     };
-
+  
     mediaRecorderRef.current.start();
     setIsRecording(true);
   };
