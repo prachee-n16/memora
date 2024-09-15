@@ -213,6 +213,41 @@ def add_person():
         conn.rollback()
         return jsonify({"error": str(e)}), 400
 
+@app.route('/getface', methods=['POST'])
+def getface():
+    embedding = request.json.get('embedding')
+    if not embedding:
+        return jsonify({"response": "No embedding provided"}), 400
+    try:
+        query = "SELECT Top 1 * FROM Faces ORDER BY VECTOR_DOT_PRODUCT(face_embedding, TO_VECTOR(:embedding)) DESC"
+        cursor.execute(query, (embedding,))
+        result = cursor.fetchone()
+        if result:
+            response = {"name": result[0], "other_info": result[1]}
+        else:
+            response = {"response": "No matching face found"}
+    except Exception as inst:
+        return jsonify({"response": str(inst)})
+    finally:
+        cursor.close()
+        conn.close()
+
+    return jsonify(response)
+
+@app.route('/insert_face', methods=['POST'])
+def insert_face():
+    data = request.json
+    try:
+        cursor.execute("""
+            INSERT INTO faces (name, relationship, face_embedding, other_info) 
+            VALUES (?, ?, ?, ?, ?)
+        """, [data['name'], data['relationship'], data['face_embedding'], data['other_info']])
+        conn.commit()
+        return jsonify({"message": "Person added successfully", "person_id": cursor.lastrowid}), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 400
+
 if __name__ == '__main__':
     app.run(debug=True)
     
