@@ -10,6 +10,11 @@ from deepgram import DeepgramClient, PrerecordedOptions
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain_iris import IRISVector
 import requests
+import re
+
+import base64
+from PIL import Image
+from io import BytesIO
 
 load_dotenv()
 
@@ -223,7 +228,7 @@ def getface():
         cursor.execute(query, (embedding,))
         result = cursor.fetchone()
         if result:
-            response = {"name": result[0], "other_info": result[1]}
+            response = {"name": result[0], "relationship": result[1], "other_info": result[2]}
         else:
             response = {"response": "No matching face found"}
     except Exception as inst:
@@ -247,6 +252,38 @@ def insert_face():
     except Exception as e:
         conn.rollback()
         return jsonify({"error": str(e)}), 400
+
+def pil_to_b64(pil_img):
+    buffered = BytesIO()
+    pil_img.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+    return img_str
+
+@app.route('/annotate_memory', methods=['POST'])
+def annotate_memory():
+    data_req = request.json
+
+    data = {
+    "image": data_req["image"],
+    "prompt": "What objects are present in the image and their location with grounding"
+    }
+
+    res = requests.post(
+        "https://model-<model-id>.api.baseten.co/development/predict",
+        headers={"Authorization": "Api-Key cPoGU7hB.FnWNlVtx7CFsRqENKScO6wjMvHA76DQQ"},
+        json=data,
+    )
+
+    js = res.json()
+    output = js["output"]
+    match = re.search(r'<ref>.*?</ref>(.*?)<\|endoftext\|>', output, re.DOTALL)
+    if match:
+        # Remove any <box> tags and their contents
+        content = re.sub(r'<box>.*?</box>', '', match.group(1)).strip()
+    else:
+        content = ""
+    
+    return content
 
 if __name__ == '__main__':
     app.run(debug=True)
