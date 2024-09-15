@@ -100,7 +100,6 @@ def call_llama_model(messages, stream=True):
 
     return response
 
-# Routes
 @app.route('/get_user/<string:name>', methods=['GET'])
 def get_user(name):
     cursor.execute("SELECT * FROM Users WHERE name = ?", [name])

@@ -12,6 +12,7 @@ const Dashboard = () => {
   const [peopleData, setPeopleData] = useState([
     {
       name: "John Doe",
+      relationship: "A close friend",
       conversations: [
         {
           date: "2024-09-12",
@@ -29,6 +30,7 @@ const Dashboard = () => {
     },
     {
       name: "Jane Smith",
+      relationship: "A close friend",
       conversations: [
         {
           date: "2024-09-11",
@@ -46,6 +48,7 @@ const Dashboard = () => {
     },
     {
       name: "Emily Johnson",
+      relationship: "A close friend",
       conversations: [
         {
           date: "2024-09-14",
