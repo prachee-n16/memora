@@ -22,6 +22,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Configuration
+# TODO: look for cheaper (and greener) alternatives
 BASETEN_API_KEY = os.getenv("BASETEN_API_KEY")
 DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
 MODEL_ID = "8w6yyp2q"
